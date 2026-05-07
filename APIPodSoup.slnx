@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/APIPodSoup.App/APIPodSoup.App.csproj" />
+    <Project Path="src/APIPodSoup.Core/APIPodSoup.Core.csproj" />
+  </Folder>
+</Solution>

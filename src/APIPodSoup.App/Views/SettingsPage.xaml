@@ -1,0 +1,168 @@
+<UserControl x:Class="APIPodSoup.App.Views.SettingsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:APIPodSoup.App.Converters"
+             Background="{StaticResource BgPrimary}">
+
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="32,24" MaxWidth="700">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Margin="0,0,0,24">
+                <TextBlock Text="Settings" Style="{StaticResource HeadingStyle}"/>
+                <TextBlock Text="Configure API keys, OSS storage, and preferences"
+                           Style="{StaticResource SubHeadingStyle}"/>
+            </StackPanel>
+
+            <!-- API Settings -->
+            <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="APIPod API" FontSize="15" FontWeight="Bold"
+                               Foreground="{StaticResource TextPrimary}" Margin="0,0,0,12"/>
+                    <TextBlock Text="API Key" Style="{StaticResource LabelStyle}"/>
+
+                    <!-- API Key: both hidden/visible use TextBox for consistent sizing -->
+                    <Grid HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="400"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- Hidden: readonly TextBox displaying fixed 12 dots -->
+                        <TextBox Grid.Column="0"
+                                 Text="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;"
+                                 IsReadOnly="True" Cursor="Hand"
+                                 Foreground="{StaticResource TextSecondary}"
+                                 Visibility="{Binding IsApiKeyVisible, Converter={StaticResource BoolToVis}, ConverterParameter=invert}"
+                                 MouseLeftButtonDown="OnApiKeyMaskClicked"/>
+                        <!-- Visible: editable TextBox -->
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}"
+                                 Visibility="{Binding IsApiKeyVisible, Converter={StaticResource BoolToVis}}"/>
+                        <!-- Eye button -->
+                        <Button Grid.Column="1" Content="👁"
+                                Style="{StaticResource IconButtonStyle}"
+                                Command="{Binding ToggleApiKeyVisibilityCommand}"
+                                Width="28" Height="28" FontSize="14"
+                                Background="Transparent" BorderThickness="0"
+                                Margin="6,0,0,0" Padding="0"/>
+                    </Grid>
+
+                    <TextBlock Text="API Base URL" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
+                    <TextBlock Text="Root domain only, e.g. https://api.apipod.ai  (paths like /v1/images/generations are added automatically)"
+                               Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding ApiBaseUrl, UpdateSourceTrigger=PropertyChanged}"
+                             Width="400" HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+
+            <!-- OSS Settings -->
+            <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Volcengine TOS (OSS)" FontSize="15" FontWeight="Bold"
+                               Foreground="{StaticResource TextPrimary}" Margin="0,0,0,12"/>
+
+                    <!-- Access Key -->
+                    <TextBlock Text="Access Key" Style="{StaticResource LabelStyle}"/>
+                    <Grid HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="400"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0"
+                                 Text="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;"
+                                 IsReadOnly="True" Cursor="Hand"
+                                 Foreground="{StaticResource TextSecondary}"
+                                 Visibility="{Binding IsOssAkVisible, Converter={StaticResource BoolToVis}, ConverterParameter=invert}"
+                                 MouseLeftButtonDown="OnOssAkMaskClicked"/>
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding OssAccessKey, UpdateSourceTrigger=PropertyChanged}"
+                                 Visibility="{Binding IsOssAkVisible, Converter={StaticResource BoolToVis}}"/>
+                        <Button Grid.Column="1" Content="👁"
+                                Style="{StaticResource IconButtonStyle}"
+                                Command="{Binding ToggleOssAkVisibilityCommand}"
+                                Width="28" Height="28" FontSize="14"
+                                Background="Transparent" BorderThickness="0"
+                                Margin="6,0,0,0" Padding="0"/>
+                    </Grid>
+
+                    <!-- Secret Key -->
+                    <TextBlock Text="Secret Key" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
+                    <Grid HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="400"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0"
+                                 Text="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;"
+                                 IsReadOnly="True" Cursor="Hand"
+                                 Foreground="{StaticResource TextSecondary}"
+                                 Visibility="{Binding IsOssSkVisible, Converter={StaticResource BoolToVis}, ConverterParameter=invert}"
+                                 MouseLeftButtonDown="OnOssSkMaskClicked"/>
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding OssSecretKey, UpdateSourceTrigger=PropertyChanged}"
+                                 Visibility="{Binding IsOssSkVisible, Converter={StaticResource BoolToVis}}"/>
+                        <Button Grid.Column="1" Content="👁"
+                                Style="{StaticResource IconButtonStyle}"
+                                Command="{Binding ToggleOssSkVisibilityCommand}"
+                                Width="28" Height="28" FontSize="14"
+                                Background="Transparent" BorderThickness="0"
+                                Margin="6,0,0,0" Padding="0"/>
+                    </Grid>
+
+                    <TextBlock Text="Endpoint" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
+                    <TextBox Text="{Binding OssEndpoint, UpdateSourceTrigger=PropertyChanged}"
+                             Width="400" HorizontalAlignment="Left"/>
+                    <TextBlock Text="Region" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
+                    <TextBox Text="{Binding OssRegion, UpdateSourceTrigger=PropertyChanged}"
+                             Width="200" HorizontalAlignment="Left"/>
+                    <TextBlock Text="Bucket Name" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
+                    <TextBox Text="{Binding OssBucketName, UpdateSourceTrigger=PropertyChanged}"
+                             Width="300" HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Download Settings -->
+            <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Local Storage" FontSize="15" FontWeight="Bold"
+                               Foreground="{StaticResource TextPrimary}" Margin="0,0,0,12"/>
+                    <TextBlock Text="Download Directory" Style="{StaticResource LabelStyle}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Text="{Binding DownloadDirectory, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Button Grid.Column="1" Content="Browse"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Command="{Binding BrowseDownloadDirCommand}"
+                                Margin="8,0,0,0"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Save -->
+            <StackPanel Grid.Row="4">
+                <Button Content="Save Settings"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Command="{Binding SaveCommand}"
+                        Width="160" Height="40"
+                        HorizontalAlignment="Left"/>
+                <TextBlock Text="{Binding SaveStatus}"
+                           Foreground="{StaticResource SuccessColor}"
+                           FontSize="12" Margin="0,8,0,0"/>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,40 @@
+## .NET build outputs
+[Bb]in/
+[Oo]bj/
+
+## Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+## VS Code
+.vscode/
+
+## JetBrains Rider
+.idea/
+*.sln.iml
+
+## NuGet
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nupkg
+**/[Pp]ackages/repositories.config
+
+## SQLite database (runtime/user data)
+*.db
+*.db-shm
+*.db-wal
+
+## OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+## Misc
+*.orig
+_ncrunch*
+*.cache
+*.lock
