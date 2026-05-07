@@ -25,12 +25,57 @@ public partial class SettingsViewModel : ObservableObject
         OssBucketName = settings.Oss.BucketName;
         DownloadDirectory = settings.DownloadDirectory;
         IsDarkTheme = settings.Theme == "Dark";
+
+        // If the field already has a value (loaded from config), hide it.
+        // If empty, show the editable box so the user can type freely.
+        IsApiKeyVisible = string.IsNullOrEmpty(ApiKey);
+        IsOssAkVisible = string.IsNullOrEmpty(OssAccessKey);
+        IsOssSkVisible = string.IsNullOrEmpty(OssSecretKey);
     }
 
-    [ObservableProperty] private string _apiKey = string.Empty;
+    // Track previous values to detect when the user starts typing in an empty field
+    private string _previousApiKey = string.Empty;
+    private string _previousOssAk = string.Empty;
+    private string _previousOssSk = string.Empty;
+
+    partial void OnApiKeyChanging(string value) => _previousApiKey = ApiKey;
+    partial void OnApiKeyChanged(string value)
+    {
+        // User just typed into an empty field → keep it visible
+        if (string.IsNullOrEmpty(_previousApiKey) && !string.IsNullOrEmpty(value))
+            IsApiKeyVisible = true;
+    }
+
+    partial void OnOssAccessKeyChanging(string value) => _previousOssAk = OssAccessKey;
+    partial void OnOssAccessKeyChanged(string value)
+    {
+        if (string.IsNullOrEmpty(_previousOssAk) && !string.IsNullOrEmpty(value))
+            IsOssAkVisible = true;
+    }
+
+    partial void OnOssSecretKeyChanging(string value) => _previousOssSk = OssSecretKey;
+    partial void OnOssSecretKeyChanged(string value)
+    {
+        if (string.IsNullOrEmpty(_previousOssSk) && !string.IsNullOrEmpty(value))
+            IsOssSkVisible = true;
+    }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowApiKeyMask))]
+    [NotifyPropertyChangedFor(nameof(CanShowApiKeyEdit))]
+    [NotifyPropertyChangedFor(nameof(ShowApiKeyEye))]
+    private string _apiKey = string.Empty;
     [ObservableProperty] private string _apiBaseUrl = "https://api.apipod.ai";
-    [ObservableProperty] private string _ossAccessKey = string.Empty;
-    [ObservableProperty] private string _ossSecretKey = string.Empty;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowOssAkMask))]
+    [NotifyPropertyChangedFor(nameof(CanShowOssAkEdit))]
+    [NotifyPropertyChangedFor(nameof(ShowOssAkEye))]
+    private string _ossAccessKey = string.Empty;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowOssSkMask))]
+    [NotifyPropertyChangedFor(nameof(CanShowOssSkEdit))]
+    [NotifyPropertyChangedFor(nameof(ShowOssSkEye))]
+    private string _ossSecretKey = string.Empty;
     [ObservableProperty] private string _ossEndpoint = string.Empty;
     [ObservableProperty] private string _ossRegion = string.Empty;
     [ObservableProperty] private string _ossBucketName = string.Empty;
@@ -39,9 +84,33 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private string _saveStatus = string.Empty;
 
     // Password visibility toggles
-    [ObservableProperty] private bool _isApiKeyVisible;
-    [ObservableProperty] private bool _isOssAkVisible;
-    [ObservableProperty] private bool _isOssSkVisible;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowApiKeyMask))]
+    [NotifyPropertyChangedFor(nameof(CanShowApiKeyEdit))]
+    private bool _isApiKeyVisible;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowOssAkMask))]
+    [NotifyPropertyChangedFor(nameof(CanShowOssAkEdit))]
+    private bool _isOssAkVisible;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowOssSkMask))]
+    [NotifyPropertyChangedFor(nameof(CanShowOssSkEdit))]
+    private bool _isOssSkVisible;
+
+    // Computed: only show the dot-mask when hidden AND the field actually has a value
+    public bool ShowApiKeyMask => !IsApiKeyVisible && !string.IsNullOrEmpty(ApiKey);
+    public bool ShowOssAkMask => !IsOssAkVisible && !string.IsNullOrEmpty(OssAccessKey);
+    public bool ShowOssSkMask => !IsOssSkVisible && !string.IsNullOrEmpty(OssSecretKey);
+
+    // Computed: always show the editable box when value is empty (so field doesn't disappear)
+    public bool CanShowApiKeyEdit => IsApiKeyVisible || string.IsNullOrEmpty(ApiKey);
+    public bool CanShowOssAkEdit => IsOssAkVisible || string.IsNullOrEmpty(OssAccessKey);
+    public bool CanShowOssSkEdit => IsOssSkVisible || string.IsNullOrEmpty(OssSecretKey);
+
+    // Computed: only show the eye toggle when there's actually a value to protect
+    public bool ShowApiKeyEye => !string.IsNullOrEmpty(ApiKey);
+    public bool ShowOssAkEye => !string.IsNullOrEmpty(OssAccessKey);
+    public bool ShowOssSkEye => !string.IsNullOrEmpty(OssSecretKey);
 
     [RelayCommand]
     private void ToggleApiKeyVisibility() => IsApiKeyVisible = !IsApiKeyVisible;
@@ -90,9 +159,10 @@ public partial class SettingsViewModel : ObservableObject
 
             await File.WriteAllTextAsync(configPath, json);
             SaveStatus = $"Settings saved at {DateTime.Now:HH:mm:ss}";
-            IsApiKeyVisible = false;
-            IsOssAkVisible = false;
-            IsOssSkVisible = false;
+            // After saving, hide fields that have values; keep empty fields visible
+            IsApiKeyVisible = string.IsNullOrEmpty(ApiKey);
+            IsOssAkVisible = string.IsNullOrEmpty(OssAccessKey);
+            IsOssSkVisible = string.IsNullOrEmpty(OssSecretKey);
         }
         catch (Exception ex)
         {

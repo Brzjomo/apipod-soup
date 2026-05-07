@@ -43,16 +43,17 @@
                                  Text="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;"
                                  IsReadOnly="True" Cursor="Hand"
                                  Foreground="{StaticResource TextSecondary}"
-                                 Visibility="{Binding IsApiKeyVisible, Converter={StaticResource BoolToVis}, ConverterParameter=invert}"
+                                 Visibility="{Binding ShowApiKeyMask, Converter={StaticResource BoolToVis}}"
                                  MouseLeftButtonDown="OnApiKeyMaskClicked"/>
                         <!-- Visible: editable TextBox -->
                         <TextBox Grid.Column="0"
                                  Text="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}"
-                                 Visibility="{Binding IsApiKeyVisible, Converter={StaticResource BoolToVis}}"/>
+                                 Visibility="{Binding CanShowApiKeyEdit, Converter={StaticResource BoolToVis}}"/>
                         <!-- Eye button -->
                         <Button Grid.Column="1" Content="👁"
                                 Style="{StaticResource IconButtonStyle}"
                                 Command="{Binding ToggleApiKeyVisibilityCommand}"
+                                Visibility="{Binding ShowApiKeyEye, Converter={StaticResource BoolToVis}}"
                                 Width="28" Height="28" FontSize="14"
                                 Background="Transparent" BorderThickness="0"
                                 Margin="6,0,0,0" Padding="0"/>
@@ -83,14 +84,15 @@
                                  Text="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;"
                                  IsReadOnly="True" Cursor="Hand"
                                  Foreground="{StaticResource TextSecondary}"
-                                 Visibility="{Binding IsOssAkVisible, Converter={StaticResource BoolToVis}, ConverterParameter=invert}"
+                                 Visibility="{Binding ShowOssAkMask, Converter={StaticResource BoolToVis}}"
                                  MouseLeftButtonDown="OnOssAkMaskClicked"/>
                         <TextBox Grid.Column="0"
                                  Text="{Binding OssAccessKey, UpdateSourceTrigger=PropertyChanged}"
-                                 Visibility="{Binding IsOssAkVisible, Converter={StaticResource BoolToVis}}"/>
+                                 Visibility="{Binding CanShowOssAkEdit, Converter={StaticResource BoolToVis}}"/>
                         <Button Grid.Column="1" Content="👁"
                                 Style="{StaticResource IconButtonStyle}"
                                 Command="{Binding ToggleOssAkVisibilityCommand}"
+                                Visibility="{Binding ShowOssAkEye, Converter={StaticResource BoolToVis}}"
                                 Width="28" Height="28" FontSize="14"
                                 Background="Transparent" BorderThickness="0"
                                 Margin="6,0,0,0" Padding="0"/>
@@ -107,14 +109,15 @@
                                  Text="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;"
                                  IsReadOnly="True" Cursor="Hand"
                                  Foreground="{StaticResource TextSecondary}"
-                                 Visibility="{Binding IsOssSkVisible, Converter={StaticResource BoolToVis}, ConverterParameter=invert}"
+                                 Visibility="{Binding ShowOssSkMask, Converter={StaticResource BoolToVis}}"
                                  MouseLeftButtonDown="OnOssSkMaskClicked"/>
                         <TextBox Grid.Column="0"
                                  Text="{Binding OssSecretKey, UpdateSourceTrigger=PropertyChanged}"
-                                 Visibility="{Binding IsOssSkVisible, Converter={StaticResource BoolToVis}}"/>
+                                 Visibility="{Binding CanShowOssSkEdit, Converter={StaticResource BoolToVis}}"/>
                         <Button Grid.Column="1" Content="👁"
                                 Style="{StaticResource IconButtonStyle}"
                                 Command="{Binding ToggleOssSkVisibilityCommand}"
+                                Visibility="{Binding ShowOssSkEye, Converter={StaticResource BoolToVis}}"
                                 Width="28" Height="28" FontSize="14"
                                 Background="Transparent" BorderThickness="0"
                                 Margin="6,0,0,0" Padding="0"/>
