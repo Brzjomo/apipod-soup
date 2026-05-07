@@ -1,6 +1,7 @@
 ## .NET build outputs
 [Bb]in/
 [Oo]bj/
+publish
 
 ## Visual Studio
 .vs/
