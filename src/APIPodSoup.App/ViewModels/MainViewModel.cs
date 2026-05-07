@@ -14,6 +14,13 @@ public partial class MainViewModel : ObservableObject
     private readonly IOptionsMonitor<AppSettings> _settings;
     private readonly IModelProfileProvider _profileProvider;
 
+    /// <summary>
+    /// Cache generation-page ViewModels so their state (prompt, progress, reference images)
+    /// survives navigation away and back.  History and Settings are omitted — they always get
+    /// fresh instances.
+    /// </summary>
+    private readonly Dictionary<string, object> _viewCache = [];
+
     [ObservableProperty]
     private object? _currentView;
 
@@ -34,7 +41,9 @@ public partial class MainViewModel : ObservableObject
         _settings = settings;
         _profileProvider = profileProvider;
         NavigateCommand = new RelayCommand<string?>(Navigate);
-        CurrentView = App.Host.Services.GetRequiredService<TextToImageViewModel>();
+
+        // Bootstrap: create the initial view from cache (or create fresh)
+        CurrentView = GetOrCreateView("TextToImage");
         RefreshStatus();
     }
 
@@ -56,7 +65,8 @@ public partial class MainViewModel : ObservableObject
 
     /// <summary>
     /// Navigate to the generation page matching this record's model category,
-    /// and pre-fill all parameters for reuse.
+    /// and pre-fill all parameters for reuse.  Replaces the cached instance so
+    /// the user sees the reused parameters on next visit.
     /// </summary>
     public void NavigateToRecord(HistoryRecord record)
     {
@@ -70,12 +80,14 @@ public partial class MainViewModel : ObservableObject
         {
             var vm = App.Host.Services.GetRequiredService<TextToVideoViewModel>();
             vm.LoadFromRecord(record);
+            _viewCache["TextToVideo"] = vm;
             CurrentView = vm;
         }
         else
         {
             var vm = App.Host.Services.GetRequiredService<TextToImageViewModel>();
             vm.LoadFromRecord(record);
+            _viewCache["TextToImage"] = vm;
             CurrentView = vm;
         }
 
@@ -87,15 +99,30 @@ public partial class MainViewModel : ObservableObject
         RefreshStatus();
     }
 
-    partial void OnSelectedNavItemChanged(string value)
+    private object GetOrCreateView(string key)
     {
-        CurrentView = value switch
+        // Only cache generation pages — History and Settings always get fresh instances
+        if (_viewCache.TryGetValue(key, out var cached))
+            return cached;
+
+        var view = key switch
         {
-            "TextToImage" => App.Host.Services.GetRequiredService<TextToImageViewModel>(),
+            "TextToImage" => (object)App.Host.Services.GetRequiredService<TextToImageViewModel>(),
             "TextToVideo" => App.Host.Services.GetRequiredService<TextToVideoViewModel>(),
             "History" => App.Host.Services.GetRequiredService<HistoryViewModel>(),
             "Settings" => App.Host.Services.GetRequiredService<SettingsViewModel>(),
-            _ => CurrentView
+            _ => CurrentView!
         };
+
+        // History and Settings are disposable — don't cache
+        if (key is "TextToImage" or "TextToVideo")
+            _viewCache[key] = view;
+
+        return view;
+    }
+
+    partial void OnSelectedNavItemChanged(string value)
+    {
+        CurrentView = GetOrCreateView(value);
     }
 }

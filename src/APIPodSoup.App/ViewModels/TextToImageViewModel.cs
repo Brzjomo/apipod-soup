@@ -3,7 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Windows;
 using System.Windows.Media.Imaging;
+using APIPodSoup.App.Views;
 using APIPodSoup.Core.Enums;
 using APIPodSoup.Core.Models;
 using APIPodSoup.Core.Services;
@@ -119,6 +121,7 @@ public partial class TextToImageViewModel : ObservableObject
         }
 
         IsProcessing = true;
+        HistoryRecord? history = null;
         try
         {
             StepText = "Uploading reference images...";
@@ -153,7 +156,7 @@ public partial class TextToImageViewModel : ObservableObject
 
             var taskId = submitResult.Data?.TaskId ?? throw new InvalidOperationException("No task ID returned");
 
-            var history = new HistoryRecord
+            history = new HistoryRecord
             {
                 ModelType = SelectedModel.ModelId,
                 ModelDisplayName = SelectedModel.DisplayName,
@@ -188,49 +191,76 @@ public partial class TextToImageViewModel : ObservableObject
                 }
             }, timerCts.Token);
 
-            var taskResult = await _apiService.WaitForCompletionAsync(taskId, 5000);
-            timerCts.Cancel();
-            stopwatch.Stop();
+            try
+            {
+                var taskResult = await _apiService.WaitForCompletionAsync(taskId, 5000);
 
-            if (taskResult.Data?.ResultUrls == null || taskResult.Data.ResultUrls.Count == 0)
-                throw new InvalidOperationException("No result URLs returned");
+                if (taskResult.Data?.ResultUrls == null || taskResult.Data.ResultUrls.Count == 0)
+                    throw new InvalidOperationException("No result URLs returned");
 
-            StepText = "Downloading results...";
-            Progress = 0.8;
+                Debug.WriteLine($"[Result] Download URLs:");
+                foreach (var url in taskResult.Data.ResultUrls)
+                    Debug.WriteLine($"  {url}");
 
-            var prefix = $"{SelectedModel.DisplayName.Replace(" ", "_")}_{SelectedQuality}";
-            var localPaths = await _downloadService.DownloadFilesAsync(
-                taskResult.Data.ResultUrls, prefix);
+                StepText = "Downloading results...";
+                Progress = 0.8;
 
-            // Store result files as blobs in the database
-            await StoreResultBlobsAsync(history.Id, localPaths);
+                var prefix = $"{SelectedModel.DisplayName.Replace(" ", "_")}_{SelectedQuality}";
+                var localPaths = await _downloadService.DownloadFilesAsync(
+                    taskResult.Data.ResultUrls, prefix);
 
-            history.ApiResponseJson = JsonSerializer.Serialize(taskResult);
-            history.ResultUrls = JsonSerializer.Serialize(taskResult.Data.ResultUrls);
-            history.LocalResultPaths = JsonSerializer.Serialize(localPaths);
-            history.Status = CoreTaskStatus.Completed.ToString().ToLower();
-            history.CompletedAt = DateTime.UtcNow;  // used to compute elapsed in detail view
-            await _historyService.UpdateAsync(history);
+                // Store result files as blobs in the database
+                await StoreResultBlobsAsync(history.Id, localPaths);
 
-            ResultImages.Clear();
-            foreach (var path in localPaths)
-                ResultImages.Add(path);
+                history.ApiResponseJson = JsonSerializer.Serialize(taskResult);
+                history.ResultUrls = JsonSerializer.Serialize(taskResult.Data.ResultUrls);
+                history.LocalResultPaths = JsonSerializer.Serialize(localPaths);
+                history.Status = CoreTaskStatus.Completed.ToString().ToLower();
+                history.CompletedAt = DateTime.UtcNow;  // used to compute elapsed in detail view
+                await _historyService.UpdateAsync(history);
 
-            var elapsedSec = (int)stopwatch.Elapsed.TotalSeconds;
-            StepText = "Done!";
-            Progress = 1.0;
-            ProgressText = $"Generated {localPaths.Count} image(s) in {elapsedSec}s";
+                ResultImages.Clear();
+                foreach (var path in localPaths)
+                    ResultImages.Add(path);
 
-            // Auto‑navigate to History after a short pause
-            await Task.Delay(1500);
-            var mainVm = App.Host.Services.GetRequiredService<MainViewModel>();
-            mainVm.SelectedNavItem = "History";
+                var elapsedSec = (int)stopwatch.Elapsed.TotalSeconds;
+                StepText = "Done!";
+                Progress = 1.0;
+                ProgressText = $"Generated {localPaths.Count} image(s) in {elapsedSec}s";
+
+                // Auto‑navigate to History after a short pause (only if user hasn't navigated away)
+                await Task.Delay(1500);
+                var mainVm = App.Host.Services.GetRequiredService<MainViewModel>();
+                if (mainVm.SelectedNavItem == "TextToImage")
+                    mainVm.SelectedNavItem = "History";
+            }
+            finally
+            {
+                timerCts.Cancel();
+                stopwatch.Stop();
+            }
         }
         catch (Exception ex)
         {
+            MessageDialog.ShowError("Generation Failed",
+                $"Image generation failed.\n\n{ex.Message}");
+
             StepText = $"Error: {ex.Message}";
             ProgressText = "Generation failed";
             Progress = 0;
+
+            // Update history record with failure status
+            if (history != null)
+            {
+                try
+                {
+                    history.Status = CoreTaskStatus.Failed.ToString().ToLower();
+                    history.ErrorMessage = ex.Message;
+                    history.CompletedAt = DateTime.UtcNow;
+                    await _historyService.UpdateAsync(history);
+                }
+                catch { /* best-effort */ }
+            }
         }
         finally
         {

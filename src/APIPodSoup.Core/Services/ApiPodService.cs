@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -47,10 +48,14 @@ public class ApiPodService : IApiPodService
     {
         EnsureBaseAddress();
         var json = JsonSerializer.Serialize(request);
+        Debug.WriteLine($"[API] POST /v1/images/generations");
+        Debug.WriteLine($"  Request: {json}");
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PostAsync("v1/images/generations", content, ct);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<SubmitTaskResponse>(cancellationToken: ct))!;
+        var responseJson = await response.Content.ReadAsStringAsync(ct);
+        Debug.WriteLine($"  Response: {responseJson}");
+        return JsonSerializer.Deserialize<SubmitTaskResponse>(responseJson)!;
     }
 
     public async Task<TaskDetailResponse> GetTaskStatusAsync(string taskId, CancellationToken ct = default)
@@ -58,7 +63,10 @@ public class ApiPodService : IApiPodService
         EnsureBaseAddress();
         var response = await _httpClient.GetAsync($"v1/images/status/{taskId}", ct);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<TaskDetailResponse>(cancellationToken: ct))!;
+        var rawJson = await response.Content.ReadAsStringAsync(ct);
+        Debug.WriteLine($"[API] GET /v1/images/status/{taskId}");
+        Debug.WriteLine($"  Response: {rawJson}");
+        return JsonSerializer.Deserialize<TaskDetailResponse>(rawJson)!;
     }
 
     // ---- Video generation (placeholder — API docs pending) ----
@@ -68,10 +76,14 @@ public class ApiPodService : IApiPodService
     {
         EnsureBaseAddress();
         var json = JsonSerializer.Serialize(request);
+        Debug.WriteLine($"[API] POST /v1/videos/generations");
+        Debug.WriteLine($"  Request: {json}");
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PostAsync("v1/videos/generations", content, ct);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<SubmitTaskResponse>(cancellationToken: ct))!;
+        var responseJson = await response.Content.ReadAsStringAsync(ct);
+        Debug.WriteLine($"  Response: {responseJson}");
+        return JsonSerializer.Deserialize<SubmitTaskResponse>(responseJson)!;
     }
 
     public async Task<TaskDetailResponse> GetVideoTaskStatusAsync(string taskId, CancellationToken ct = default)
@@ -79,10 +91,19 @@ public class ApiPodService : IApiPodService
         EnsureBaseAddress();
         var response = await _httpClient.GetAsync($"v1/videos/status/{taskId}", ct);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<TaskDetailResponse>(cancellationToken: ct))!;
+        var rawJson = await response.Content.ReadAsStringAsync(ct);
+        Debug.WriteLine($"[API] GET /v1/videos/status/{taskId}");
+        Debug.WriteLine($"  Response: {rawJson}");
+        return JsonSerializer.Deserialize<TaskDetailResponse>(rawJson)!;
     }
 
     // ---- Polling ----
+
+    private static readonly HashSet<string> KnownIntermediateStatuses =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            "pending", "queued", "processing", "submitted", "running",
+        };
 
     public async Task<TaskDetailResponse> WaitForCompletionAsync(
         string taskId, int pollIntervalMs = 2000, CancellationToken ct = default)
@@ -94,13 +115,26 @@ public class ApiPodService : IApiPodService
             if (result.Code != 200)
                 throw new InvalidOperationException($"Task query failed: {result.Message}");
 
-            var status = result.Data?.Status?.ToLowerInvariant();
+            var status = result.Data?.Status?.ToLowerInvariant() ?? "";
+            var error = result.Data?.Error;
+
+            Debug.WriteLine($"[Poll] taskId={taskId}, status={status}, error={error}");
+
             if (status == "completed")
                 return result;
             if (status == "failed")
-                throw new InvalidOperationException($"Task failed: {result.Data?.Error ?? "Unknown error"}");
+                throw new InvalidOperationException(
+                    $"Task failed. {error ?? "The generation was rejected by the server, possibly due to content safety review or service error."}");
             if (status == "cancelled")
                 throw new OperationCanceledException("Task was cancelled by the server.");
+            if (status == "rejected")
+                throw new InvalidOperationException(
+                    $"Content rejected by safety review. {error ?? "The generated content was flagged by moderation."}");
+
+            // Unknown status that isn't a known intermediate → treat as terminal
+            if (!KnownIntermediateStatuses.Contains(status))
+                throw new InvalidOperationException(
+                    $"Task ended with unexpected status: \"{status}\". {error ?? ""}");
 
             await Task.Delay(pollIntervalMs, ct);
         }
@@ -118,13 +152,25 @@ public class ApiPodService : IApiPodService
             if (result.Code != 200)
                 throw new InvalidOperationException($"Video task query failed: {result.Message}");
 
-            var status = result.Data?.Status?.ToLowerInvariant();
+            var status = result.Data?.Status?.ToLowerInvariant() ?? "";
+            var error = result.Data?.Error;
+
+            Debug.WriteLine($"[Poll] taskId={taskId}, status={status}, error={error}");
+
             if (status == "completed")
                 return result;
             if (status == "failed")
-                throw new InvalidOperationException($"Video task failed: {result.Data?.Error ?? "Unknown error"}");
+                throw new InvalidOperationException(
+                    $"Video task failed. {error ?? "The generation was rejected by the server, possibly due to content safety review or service error."}");
             if (status == "cancelled")
                 throw new OperationCanceledException("Video task was cancelled by the server.");
+            if (status == "rejected")
+                throw new InvalidOperationException(
+                    $"Content rejected by safety review. {error ?? "The generated content was flagged by moderation."}");
+
+            if (!KnownIntermediateStatuses.Contains(status))
+                throw new InvalidOperationException(
+                    $"Video task ended with unexpected status: \"{status}\". {error ?? ""}");
 
             await Task.Delay(pollIntervalMs, ct);
         }

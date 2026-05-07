@@ -65,7 +65,7 @@ public class TaskDetailData
     [JsonPropertyName("result")]
     public List<string>? ResultUrls { get; set; }
 
-    [JsonPropertyName("error")]
+    [JsonPropertyName("error_message")]
     public string? Error { get; set; }
 
     [JsonPropertyName("completed_at")]
