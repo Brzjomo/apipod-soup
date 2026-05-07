@@ -1,6 +1,7 @@
 <Window x:Class="APIPodSoup.App.Views.MessageDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:APIPodSoup.App.Markup"
         Title="MessageDialog"
         Width="440" MinHeight="200" MaxHeight="480"
         SizeToContent="Height"
@@ -81,7 +82,7 @@
             <!-- OK button -->
             <Button Grid.Row="3"
                     x:Name="OkButton"
-                    Content="OK"
+                    Content="{loc:Loc Key=Dialog.OK}"
                     Width="80"
                     Style="{StaticResource PrimaryButtonStyle}"
                     HorizontalAlignment="Right"

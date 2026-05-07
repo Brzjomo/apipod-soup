@@ -33,7 +33,7 @@ public class DownloadService : IDownloadService
             response.EnsureSuccessStatusCode();
 
             var ext = GetExtension(response);
-            var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff");
+            var timestamp = DateTime.Now.ToString("yyyyMMddHHmmssfff");
 
             string fileName;
             if (!string.IsNullOrWhiteSpace(fileNamePrefix))

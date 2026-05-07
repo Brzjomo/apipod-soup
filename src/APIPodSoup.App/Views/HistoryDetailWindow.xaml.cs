@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using APIPodSoup.Core.Localization;
 using APIPodSoup.Core.Models;
 using APIPodSoup.App.ViewModels;
 using APIPodSoup.Core.Services;
@@ -13,10 +14,12 @@ namespace APIPodSoup.App.Views;
 public partial class HistoryDetailWindow : Window
 {
     private readonly HistoryRecord _record;
+    private ILocalizationService _loc = null!;
 
     public HistoryDetailWindow(HistoryRecord record)
     {
         InitializeComponent();
+        _loc = App.Host.Services.GetRequiredService<ILocalizationService>();
         _record = record;
         DataContext = record;
         Loaded += OnLoaded;
@@ -42,11 +45,16 @@ public partial class HistoryDetailWindow : Window
 
             foreach (var blob in blobs)
             {
-                if (IsImageContentType(blob.ContentType))
+                if (blob.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
                 {
                     var bitmap = CreateBitmapFromBytes(blob.Data);
                     if (bitmap != null)
                         ResultItems.Items.Add(new ImageItem { Image = bitmap, FileName = blob.FileName });
+                }
+                else if (blob.ContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
+                {
+                    ResultItems.Items.Add(new ImageItem { FileName = blob.FileName, IsVideo = true });
+                    VideoHint.Visibility = Visibility.Visible;
                 }
             }
         }
@@ -64,7 +72,17 @@ public partial class HistoryDetailWindow : Window
         if (paths == null) return;
         foreach (var path in paths)
         {
-            if (File.Exists(path))
+            if (!File.Exists(path)) continue;
+            var fileName = Path.GetFileName(path);
+            var ext = Path.GetExtension(path).ToLower();
+            var isVideo = ext is ".mp4" or ".mov" or ".webm";
+
+            if (isVideo)
+            {
+                ResultItems.Items.Add(new ImageItem { FileName = fileName, IsVideo = true });
+                VideoHint.Visibility = Visibility.Visible;
+            }
+            else
             {
                 try
                 {
@@ -74,11 +92,7 @@ public partial class HistoryDetailWindow : Window
                     bitmap.UriSource = new Uri(path);
                     bitmap.EndInit();
                     bitmap.Freeze();
-                    ResultItems.Items.Add(new ImageItem
-                    {
-                        Image = bitmap,
-                        FileName = Path.GetFileName(path)
-                    });
+                    ResultItems.Items.Add(new ImageItem { Image = bitmap, FileName = fileName });
                 }
                 catch { }
             }
@@ -131,7 +145,7 @@ public partial class HistoryDetailWindow : Window
     {
         var dlg = new Microsoft.Win32.OpenFolderDialog
         {
-            Title = "Select export directory",
+            Title = _loc["Dialog.SelectExportDir"],
         };
         if (dlg.ShowDialog() != true) return;
 
@@ -139,12 +153,12 @@ public partial class HistoryDetailWindow : Window
         {
             var historyService = App.Host.Services.GetRequiredService<IHistoryService>();
             await historyService.ExportBlobsAsync(_record.Id, dlg.FolderName);
-            MessageBox.Show($"Exported to {dlg.FolderName}", "Export Complete",
+            MessageBox.Show(_loc.Get("History.ExportComplete", dlg.FolderName), _loc["Dialog.ExportComplete"],
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Export failed: {ex.Message}", "Error",
+            MessageBox.Show(_loc.Get("History.ExportFailed", ex.Message), _loc["Dialog.Error"],
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -159,9 +173,10 @@ public partial class HistoryDetailWindow : Window
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 }
 
-/// <summary>Holds a loaded image and its original filename for the ItemsControl.</summary>
+/// <summary>Holds a loaded image/video item for the ItemsControl.</summary>
 public class ImageItem
 {
     public BitmapImage? Image { get; set; }
     public string FileName { get; set; } = string.Empty;
+    public bool IsVideo { get; set; }
 }

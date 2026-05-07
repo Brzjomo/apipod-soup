@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using APIPodSoup.Core.Enums;
+using APIPodSoup.Core.Localization;
 using APIPodSoup.Core.Models;
 using APIPodSoup.Core.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -13,6 +14,7 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly IOptionsMonitor<AppSettings> _settings;
     private readonly IModelProfileProvider _profileProvider;
+    private readonly ILocalizationService _loc;
 
     /// <summary>
     /// Cache generation-page ViewModels so their state (prompt, progress, reference images)
@@ -36,10 +38,12 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _balanceText = "--";
 
-    public MainViewModel(IOptionsMonitor<AppSettings> settings, IModelProfileProvider profileProvider)
+    public MainViewModel(IOptionsMonitor<AppSettings> settings, IModelProfileProvider profileProvider, ILocalizationService loc)
     {
         _settings = settings;
         _profileProvider = profileProvider;
+        _loc = loc;
+        _statusText = _loc["Status.Ready"];
         NavigateCommand = new RelayCommand<string?>(Navigate);
 
         // Bootstrap: create the initial view from cache (or create fresh)
@@ -53,7 +57,7 @@ public partial class MainViewModel : ObservableObject
     {
         var hasApiKey = !string.IsNullOrWhiteSpace(_settings.CurrentValue.ApiKey);
         IsConnected = hasApiKey;
-        StatusText = hasApiKey ? "API available" : "API unavailable — configure in Settings";
+        StatusText = hasApiKey ? _loc["Status.ApiAvailable"] : _loc["Status.ApiUnavailable"];
     }
 
     private void Navigate(string? target)
@@ -111,6 +115,7 @@ public partial class MainViewModel : ObservableObject
             "TextToVideo" => App.Host.Services.GetRequiredService<TextToVideoViewModel>(),
             "History" => App.Host.Services.GetRequiredService<HistoryViewModel>(),
             "Settings" => App.Host.Services.GetRequiredService<SettingsViewModel>(),
+            "About" => App.Host.Services.GetRequiredService<AboutViewModel>(),
             _ => CurrentView!
         };
 

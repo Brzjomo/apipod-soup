@@ -1,0 +1,11 @@
+using System.Windows.Controls;
+
+namespace APIPodSoup.App.Views;
+
+public partial class AboutPage : UserControl
+{
+    public AboutPage()
+    {
+        InitializeComponent();
+    }
+}

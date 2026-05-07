@@ -3,6 +3,7 @@ using System.IO;
 using APIPodSoup.App.ViewModels;
 using APIPodSoup.App.Views;
 using APIPodSoup.Core.Data;
+using APIPodSoup.Core.Localization;
 using APIPodSoup.Core.Models;
 using APIPodSoup.Core.Services;
 using Microsoft.EntityFrameworkCore;
@@ -48,12 +49,19 @@ public partial class App : Application
         builder.Services.AddSingleton<IOssService, VolcengineOssService>();
         builder.Services.AddSingleton<IHistoryService, HistoryService>();
 
+        // Localization
+        var langDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Lang");
+        var locService = new LocalizationService(langDir);
+        builder.Services.AddSingleton(locService);
+        builder.Services.AddSingleton<ILocalizationService>(locService);
+
         // ViewModels
         builder.Services.AddSingleton<MainViewModel>();
         builder.Services.AddTransient<TextToImageViewModel>();
         builder.Services.AddTransient<TextToVideoViewModel>();
         builder.Services.AddTransient<HistoryViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
+        builder.Services.AddTransient<AboutViewModel>();
 
         // Views
         builder.Services.AddTransient<MainWindow>();
@@ -76,6 +84,10 @@ public partial class App : Application
             "CreatedAt TEXT NOT NULL)");
         db.Database.ExecuteSqlRaw(
             "CREATE INDEX IF NOT EXISTS IX_ResultBlobs_HistoryRecordId ON ResultBlobs(HistoryRecordId)");
+
+        // Load saved language from config, fall back to "en"
+        var savedLang = builder.Configuration.GetValue("Language", "en");
+        Host.Services.GetRequiredService<ILocalizationService>().LoadLanguage(savedLang);
 
         var mainWindow = Host.Services.GetRequiredService<MainWindow>();
         mainWindow.Show();

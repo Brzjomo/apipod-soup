@@ -41,6 +41,18 @@ public class ApiPodService : IApiPodService
         }
     }
 
+    // ---- Helpers ----
+
+    private static async Task EnsureSuccessAsync(HttpResponseMessage response, CancellationToken ct)
+    {
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(ct);
+            throw new InvalidOperationException(
+                $"API returned {(int)response.StatusCode} ({response.ReasonPhrase}): {body.TrimEnd()}");
+        }
+    }
+
     // ---- Image generation (text-to-image, image-to-image) ----
 
     public async Task<SubmitTaskResponse> SubmitImageGenerationAsync(
@@ -52,7 +64,7 @@ public class ApiPodService : IApiPodService
         Debug.WriteLine($"  Request: {json}");
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PostAsync("v1/images/generations", content, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, ct);
         var responseJson = await response.Content.ReadAsStringAsync(ct);
         Debug.WriteLine($"  Response: {responseJson}");
         return JsonSerializer.Deserialize<SubmitTaskResponse>(responseJson)!;
@@ -62,7 +74,7 @@ public class ApiPodService : IApiPodService
     {
         EnsureBaseAddress();
         var response = await _httpClient.GetAsync($"v1/images/status/{taskId}", ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, ct);
         var rawJson = await response.Content.ReadAsStringAsync(ct);
         Debug.WriteLine($"[API] GET /v1/images/status/{taskId}");
         Debug.WriteLine($"  Response: {rawJson}");
@@ -80,7 +92,7 @@ public class ApiPodService : IApiPodService
         Debug.WriteLine($"  Request: {json}");
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PostAsync("v1/videos/generations", content, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, ct);
         var responseJson = await response.Content.ReadAsStringAsync(ct);
         Debug.WriteLine($"  Response: {responseJson}");
         return JsonSerializer.Deserialize<SubmitTaskResponse>(responseJson)!;
@@ -90,7 +102,7 @@ public class ApiPodService : IApiPodService
     {
         EnsureBaseAddress();
         var response = await _httpClient.GetAsync($"v1/videos/status/{taskId}", ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, ct);
         var rawJson = await response.Content.ReadAsStringAsync(ct);
         Debug.WriteLine($"[API] GET /v1/videos/status/{taskId}");
         Debug.WriteLine($"  Response: {rawJson}");

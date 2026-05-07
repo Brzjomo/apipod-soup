@@ -12,6 +12,7 @@ using APIPodSoup.Core.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using APIPodSoup.Core.Localization;
 using CoreTaskStatus = APIPodSoup.Core.Enums.TaskStatus;
 
 namespace APIPodSoup.App.ViewModels;
@@ -23,19 +24,36 @@ public partial class TextToImageViewModel : ObservableObject
     private readonly IDownloadService _downloadService;
     private readonly IHistoryService _historyService;
     private readonly IModelProfileProvider _profileProvider;
+    private readonly ILocalizationService _loc;
 
     public TextToImageViewModel(
         IApiPodService apiService,
         IOssService ossService,
         IDownloadService downloadService,
         IHistoryService historyService,
-        IModelProfileProvider profileProvider)
+        IModelProfileProvider profileProvider,
+        ILocalizationService loc)
     {
         _apiService = apiService;
         _ossService = ossService;
         _downloadService = downloadService;
         _historyService = historyService;
         _profileProvider = profileProvider;
+        _loc = loc;
+
+        _promptLabel = _loc["Gen.Label.ImageDesc"];
+        _referenceLabel = _loc["Gen.Label.RefImages"];
+
+        // Re-apply localized labels when language changes
+        if (loc is System.ComponentModel.INotifyPropertyChanged inpc)
+            inpc.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == "Item[]")
+                {
+                    PromptLabel = _loc["Gen.Label.ImageDesc"];
+                    ReferenceLabel = _loc["Gen.Label.RefImages"];
+                }
+            };
 
         OssStatus = _ossService.StatusMessage;
 
@@ -64,19 +82,22 @@ public partial class TextToImageViewModel : ObservableObject
         ShowAspectRatio = value.SupportedAspectRatios.Length > 0;
         SelectedQuality = value.SupportedQualities.FirstOrDefault();
         ShowQuality = value.SupportedQualities.Length > 0;
-        PromptLabel = value.PromptLabel;
-        ReferenceLabel = value.ReferenceLabel;
         PromptMaxLength = value.MaxPromptLength;
         MaxReferenceCount = value.MaxReferenceImages;
         ShowReferenceSection = MaxReferenceCount > 0;
     }
 
     [ObservableProperty] private string _ossStatus = string.Empty;
-    [ObservableProperty] private string _promptLabel = "Image Description";
-    [ObservableProperty] private string _referenceLabel = "Reference Images (optional)";
+    [ObservableProperty] private string _promptLabel = string.Empty;
+    [ObservableProperty] private string _referenceLabel = string.Empty;
     [ObservableProperty] private int _promptMaxLength = 4000;
-    [ObservableProperty] private int _maxReferenceCount = 8;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ReferenceLimitText))]
+    private int _maxReferenceCount = 8;
     [ObservableProperty] private bool _showReferenceSection = true;
+
+    public string ReferenceLimitText => MaxReferenceCount > 0
+        ? _loc.Get("Gen.Label.RefLimit", MaxReferenceCount) : "";
     [ObservableProperty] private bool _showQuality = true;
     [ObservableProperty] private bool _showAspectRatio = true;
 
@@ -102,21 +123,37 @@ public partial class TextToImageViewModel : ObservableObject
     [RelayCommand]
     private async Task GenerateAsync()
     {
-        if (string.IsNullOrWhiteSpace(Prompt) || SelectedModel == null) return;
+        if (SelectedModel == null) return;
+
+        if (string.IsNullOrWhiteSpace(Prompt))
+        {
+            MessageDialog.ShowError(_loc["Dialog.GenerationFailed"], _loc["Gen.Error.NoPrompt"]);
+            StepText = _loc["Gen.Error.NoPrompt"];
+            return;
+        }
+
+        if (ReferenceImages.Count > MaxReferenceCount)
+        {
+            var msg = _loc.Get("Gen.Error.TooManyRefs", MaxReferenceCount);
+            MessageDialog.ShowError(_loc["Dialog.GenerationFailed"], msg);
+            StepText = msg;
+            return;
+        }
 
         // Models that require reference images
         if (SelectedModel.RequireReferenceImage && ReferenceImages.Count == 0)
         {
-            StepText = "Error: Reference images are required for this model.";
-            ProgressText = "Please add at least one reference image";
+            MessageDialog.ShowError(_loc["Dialog.GenerationFailed"], _loc["Gen.Error.RequireRef"]);
+            StepText = _loc["Gen.Error.RequireRef"];
+            ProgressText = _loc["Gen.Error.RefHint"];
             return;
         }
 
         // Reference images require OSS — check before starting
         if (ReferenceImages.Count > 0 && !_ossService.IsConfigured)
         {
-            StepText = "Error: OSS not configured. To use reference images, set up OSS credentials in Settings.";
-            ProgressText = "Reference image upload failed";
+            StepText = _loc["Gen.Error.OssConfig"];
+            ProgressText = _loc["Gen.Error.OssUpload"];
             return;
         }
 
@@ -124,7 +161,7 @@ public partial class TextToImageViewModel : ObservableObject
         HistoryRecord? history = null;
         try
         {
-            StepText = "Uploading reference images...";
+            StepText = _loc["Gen.UploadingRefs"];
             Progress = 0.1;
 
             var ossUrls = new List<string>();
@@ -138,7 +175,7 @@ public partial class TextToImageViewModel : ObservableObject
                 }
             }
 
-            StepText = "Submitting generation task...";
+            StepText = _loc["Gen.Submitting"];
             Progress = 0.3;
 
             var request = new ImageGenerationRequest
@@ -152,9 +189,9 @@ public partial class TextToImageViewModel : ObservableObject
 
             var submitResult = await _apiService.SubmitImageGenerationAsync(request);
             if (submitResult.Code != 200)
-                throw new InvalidOperationException($"API error: {submitResult.Message}");
+                throw new InvalidOperationException(_loc.Get("Gen.Error.ApiError", submitResult.Message));
 
-            var taskId = submitResult.Data?.TaskId ?? throw new InvalidOperationException("No task ID returned");
+            var taskId = submitResult.Data?.TaskId ?? throw new InvalidOperationException(_loc["Gen.Error.NoTaskId"]);
 
             history = new HistoryRecord
             {
@@ -171,12 +208,12 @@ public partial class TextToImageViewModel : ObservableObject
             };
             await _historyService.CreateAsync(history);
 
-            StepText = "Generating image...";
+            StepText = _loc["Gen.Generating"];
             Progress = 0.4;
-            ProgressText = "Waiting for generation to complete...";
+            ProgressText = _loc["Gen.Waiting"];
 
             var stopwatch = Stopwatch.StartNew();
-            ProgressText = "Waiting for generation to complete... (0s)";
+            ProgressText = _loc["Gen.Waiting"];
 
             // Background timer to update elapsed display
             using var timerCts = new CancellationTokenSource();
@@ -187,7 +224,7 @@ public partial class TextToImageViewModel : ObservableObject
                     try { await Task.Delay(1000, timerCts.Token); }
                     catch (OperationCanceledException) { break; }
                     var ts = stopwatch.Elapsed;
-                    ProgressText = $"Waiting for generation to complete... ({ts.Minutes * 60 + ts.Seconds}s)";
+                    ProgressText = _loc.Get("Gen.WaitingElapsed", ts.Minutes * 60 + ts.Seconds);
                 }
             }, timerCts.Token);
 
@@ -196,13 +233,13 @@ public partial class TextToImageViewModel : ObservableObject
                 var taskResult = await _apiService.WaitForCompletionAsync(taskId, 5000);
 
                 if (taskResult.Data?.ResultUrls == null || taskResult.Data.ResultUrls.Count == 0)
-                    throw new InvalidOperationException("No result URLs returned");
+                    throw new InvalidOperationException(_loc["Gen.Error.NoResultUrl"]);
 
                 Debug.WriteLine($"[Result] Download URLs:");
                 foreach (var url in taskResult.Data.ResultUrls)
                     Debug.WriteLine($"  {url}");
 
-                StepText = "Downloading results...";
+                StepText = _loc["Gen.Downloading"];
                 Progress = 0.8;
 
                 var prefix = $"{SelectedModel.DisplayName.Replace(" ", "_")}_{SelectedQuality}";
@@ -224,9 +261,9 @@ public partial class TextToImageViewModel : ObservableObject
                     ResultImages.Add(path);
 
                 var elapsedSec = (int)stopwatch.Elapsed.TotalSeconds;
-                StepText = "Done!";
+                StepText = _loc["Gen.Done"];
                 Progress = 1.0;
-                ProgressText = $"Generated {localPaths.Count} image(s) in {elapsedSec}s";
+                ProgressText = _loc.Get("Gen.ResultCount", localPaths.Count, elapsedSec);
 
                 // Auto‑navigate to History after a short pause (only if user hasn't navigated away)
                 await Task.Delay(1500);
@@ -242,11 +279,11 @@ public partial class TextToImageViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageDialog.ShowError("Generation Failed",
-                $"Image generation failed.\n\n{ex.Message}");
+            MessageDialog.ShowError(_loc["Dialog.GenerationFailed"],
+                $"{_loc["Dialog.ImageGenFailed"]}\n\n{ex.Message}");
 
-            StepText = $"Error: {ex.Message}";
-            ProgressText = "Generation failed";
+            StepText = _loc.Get("Gen.Error.Prefix", ex.Message);
+            ProgressText = _loc["Gen.Failed"];
             Progress = 0;
 
             // Update history record with failure status

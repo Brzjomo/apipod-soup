@@ -79,7 +79,7 @@ public class ModelProfileProvider : IModelProfileProvider
             // ---- Video Generation ----
             new ModelProfile
             {
-                ModelId = "veo-3.1-fast",
+                ModelId = "veo3-1-fast",
                 DisplayName = "Veo 3.1 Fast",
                 Category = ModelCategory.VideoGeneration,
                 MaxReferenceImages = 2,
@@ -93,7 +93,7 @@ public class ModelProfileProvider : IModelProfileProvider
             },
             new ModelProfile
             {
-                ModelId = "veo-3.1-fast-ref",
+                ModelId = "veo3-1-fast-ref",
                 DisplayName = "Veo 3.1 Fast Ref",
                 Category = ModelCategory.VideoGeneration,
                 MaxReferenceImages = 3,

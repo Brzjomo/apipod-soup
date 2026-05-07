@@ -1,0 +1,65 @@
+<UserControl x:Class="APIPodSoup.App.Views.AboutPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:APIPodSoup.App.Markup"
+             Background="{StaticResource BgPrimary}">
+
+    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Border Style="{StaticResource CardStyle}"
+                Padding="64,48" Width="700" MinHeight="360">
+            <StackPanel HorizontalAlignment="Center" TextBlock.TextAlignment="Center">
+
+                <!-- App icon / brand -->
+                <TextBlock Text="{loc:Loc Key=App.Brand}"
+                           FontSize="28" FontWeight="Bold"
+                           Foreground="{StaticResource AccentPrimary}"
+                           Margin="0,0,0,8"/>
+
+                <TextBlock Text="{loc:Loc Key=About.Version}"
+                           Foreground="{StaticResource TextSecondary}"
+                           FontSize="{StaticResource FontSizeSm}" Margin="0,0,0,24"/>
+
+                <!-- Description -->
+                <TextBlock Text="{loc:Loc Key=About.Description}"
+                           Foreground="{StaticResource TextPrimary}"
+                           FontSize="{StaticResource FontSizeBase}"
+                           TextWrapping="Wrap" Margin="0,0,0,24"/>
+
+                <!-- Separator -->
+                <Border Height="1" Background="{StaticResource BorderSubtle}"
+                        Margin="0,0,0,20" Width="200"/>
+
+                <!-- Info rows -->
+                <TextBlock Text="{loc:Loc Key=About.VersionLabel}"
+                           Foreground="{StaticResource TextSecondary}"
+                           FontSize="11" FontWeight="SemiBold"
+                           Margin="0,0,0,2"/>
+                <TextBlock Text="{Binding AppVersion}"
+                           Foreground="{StaticResource TextPrimary}"
+                           FontSize="13" Margin="0,0,0,12"/>
+
+                <TextBlock Text="{loc:Loc Key=About.Author}"
+                           Foreground="{StaticResource TextSecondary}"
+                           FontSize="11" FontWeight="SemiBold"
+                           Margin="0,0,0,2"/>
+                <TextBlock Text="{Binding Author}"
+                           Foreground="{StaticResource TextPrimary}"
+                           FontSize="13" Margin="0,0,0,12"/>
+
+                <TextBlock Text="{loc:Loc Key=About.ProjectUrl}"
+                           Foreground="{StaticResource TextSecondary}"
+                           FontSize="11" FontWeight="SemiBold"
+                           Margin="0,0,0,2"/>
+                <TextBlock Text="{Binding ProjectUrl}"
+                           Foreground="{StaticResource AccentPrimary}"
+                           FontSize="13" Cursor="Hand"
+                           TextDecorations="Underline"
+                           Margin="0,0,0,12"/>
+
+                <TextBlock Text="{Binding Copyright}"
+                           Foreground="{StaticResource TextSecondary}"
+                           FontSize="11" Margin="0,16,0,0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

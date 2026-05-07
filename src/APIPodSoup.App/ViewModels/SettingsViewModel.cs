@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using APIPodSoup.Core.Localization;
 using APIPodSoup.Core.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -10,10 +11,12 @@ namespace APIPodSoup.App.ViewModels;
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly IOptionsMonitor<AppSettings> _optionsMonitor;
+    private readonly ILocalizationService _loc;
 
-    public SettingsViewModel(IOptionsMonitor<AppSettings> optionsMonitor)
+    public SettingsViewModel(IOptionsMonitor<AppSettings> optionsMonitor, ILocalizationService loc)
     {
         _optionsMonitor = optionsMonitor;
+        _loc = loc;
         var settings = optionsMonitor.CurrentValue;
 
         ApiKey = settings.ApiKey;
@@ -25,13 +28,27 @@ public partial class SettingsViewModel : ObservableObject
         OssBucketName = settings.Oss.BucketName;
         DownloadDirectory = settings.DownloadDirectory;
         IsDarkTheme = settings.Theme == "Dark";
+        SelectedLanguage = settings.Language;
 
         // If the field already has a value (loaded from config), hide it.
-        // If empty, show the editable box so the user can type freely.
         IsApiKeyVisible = string.IsNullOrEmpty(ApiKey);
         IsOssAkVisible = string.IsNullOrEmpty(OssAccessKey);
         IsOssSkVisible = string.IsNullOrEmpty(OssSecretKey);
     }
+
+    public static IReadOnlyList<LanguageOption> AvailableLanguages { get; } = new List<LanguageOption>
+    {
+        new("en", "English"),
+        new("zh", "中文"),
+    };
+
+    public record LanguageOption(string Code, string DisplayName)
+    {
+        public override string ToString() => $"{DisplayName} ({Code})";
+    }
+
+    [ObservableProperty]
+    private string _selectedLanguage = "en";
 
     // Track previous values to detect when the user starts typing in an empty field
     private string _previousApiKey = string.Empty;
@@ -126,7 +143,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         var dlg = new Microsoft.Win32.OpenFolderDialog
         {
-            Title = "Select download directory for generated results",
+            Title = _loc["Dialog.SelectDownloadDir"],
         };
 
         if (dlg.ShowDialog() == true)
@@ -155,10 +172,15 @@ public partial class SettingsViewModel : ObservableObject
                 },
                 DownloadDirectory = DownloadDirectory,
                 Theme = IsDarkTheme ? "Dark" : "Light",
+                Language = SelectedLanguage,
             }, new JsonSerializerOptions { WriteIndented = true });
 
             await File.WriteAllTextAsync(configPath, json);
-            SaveStatus = $"Settings saved at {DateTime.Now:HH:mm:ss}";
+
+            // Switch language immediately
+            _loc.LoadLanguage(SelectedLanguage);
+
+            SaveStatus = _loc.Get("Settings.Saved", DateTime.Now.ToString("HH:mm:ss"));
             // After saving, hide fields that have values; keep empty fields visible
             IsApiKeyVisible = string.IsNullOrEmpty(ApiKey);
             IsOssAkVisible = string.IsNullOrEmpty(OssAccessKey);
@@ -166,7 +188,7 @@ public partial class SettingsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            SaveStatus = $"Save failed: {ex.Message}";
+            SaveStatus = _loc.Get("Settings.SaveFailed", ex.Message);
         }
     }
 }

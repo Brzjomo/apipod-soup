@@ -84,6 +84,19 @@ public class PathToImageConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
+public class UtcToLocalConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is DateTime dt && dt.Kind == DateTimeKind.Utc)
+            return dt.ToLocalTime();
+        return value;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
 public class NavigationButtonActiveConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

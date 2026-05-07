@@ -2,6 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:APIPodSoup.App.Converters"
+             xmlns:loc="clr-namespace:APIPodSoup.App.Markup"
+             xmlns:vm="clr-namespace:APIPodSoup.App.ViewModels"
              Background="{StaticResource BgPrimary}">
 
     <UserControl.Resources>
@@ -16,21 +18,38 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Margin="0,0,0,24">
-                <TextBlock Text="Settings" Style="{StaticResource HeadingStyle}"/>
-                <TextBlock Text="Configure API keys, OSS storage, and preferences"
+                <TextBlock Text="{loc:Loc Key=Settings.Title}" Style="{StaticResource HeadingStyle}"/>
+                <TextBlock Text="{loc:Loc Key=Settings.Subtitle}"
                            Style="{StaticResource SubHeadingStyle}"/>
             </StackPanel>
 
-            <!-- API Settings -->
+            <!-- Language -->
             <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="APIPod API" FontSize="15" FontWeight="Bold"
+                    <TextBlock Text="{loc:Loc Key=Settings.LanguageSection}" FontSize="15" FontWeight="Bold"
                                Foreground="{StaticResource TextPrimary}" Margin="0,0,0,12"/>
-                    <TextBlock Text="API Key" Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Text="{loc:Loc Key=Settings.Language}" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox ItemsSource="{x:Static vm:SettingsViewModel.AvailableLanguages}"
+                              SelectedValue="{Binding SelectedLanguage}"
+                              SelectedValuePath="Code"
+                              DisplayMemberPath="DisplayName"
+                              Width="200" HorizontalAlignment="Left"/>
+                    <TextBlock Text="{loc:Loc Key=Settings.LanguageHint}"
+                               Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- API Settings -->
+            <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="{loc:Loc Key=Settings.ApiSection}" FontSize="15" FontWeight="Bold"
+                               Foreground="{StaticResource TextPrimary}" Margin="0,0,0,12"/>
+                    <TextBlock Text="{loc:Loc Key=Settings.ApiKey}" Style="{StaticResource LabelStyle}"/>
 
                     <!-- API Key: both hidden/visible use TextBox for consistent sizing -->
                     <Grid HorizontalAlignment="Left">
@@ -59,8 +78,8 @@
                                 Margin="6,0,0,0" Padding="0"/>
                     </Grid>
 
-                    <TextBlock Text="API Base URL" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
-                    <TextBlock Text="Root domain only, e.g. https://api.apipod.ai  (paths like /v1/images/generations are added automatically)"
+                    <TextBlock Text="{loc:Loc Key=Settings.ApiBaseUrl}" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
+                    <TextBlock Text="{loc:Loc Key=Settings.ApiBaseUrlHint}"
                                Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,4"/>
                     <TextBox Text="{Binding ApiBaseUrl, UpdateSourceTrigger=PropertyChanged}"
                              Width="400" HorizontalAlignment="Left"/>
@@ -68,13 +87,13 @@
             </Border>
 
             <!-- OSS Settings -->
-            <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+            <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="Volcengine TOS (OSS)" FontSize="15" FontWeight="Bold"
+                    <TextBlock Text="{loc:Loc Key=Settings.OssSection}" FontSize="15" FontWeight="Bold"
                                Foreground="{StaticResource TextPrimary}" Margin="0,0,0,12"/>
 
                     <!-- Access Key -->
-                    <TextBlock Text="Access Key" Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Text="{loc:Loc Key=Settings.OssAccessKey}" Style="{StaticResource LabelStyle}"/>
                     <Grid HorizontalAlignment="Left">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="400"/>
@@ -99,7 +118,7 @@
                     </Grid>
 
                     <!-- Secret Key -->
-                    <TextBlock Text="Secret Key" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
+                    <TextBlock Text="{loc:Loc Key=Settings.OssSecretKey}" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
                     <Grid HorizontalAlignment="Left">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="400"/>
@@ -123,31 +142,31 @@
                                 Margin="6,0,0,0" Padding="0"/>
                     </Grid>
 
-                    <TextBlock Text="Endpoint" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
+                    <TextBlock Text="{loc:Loc Key=Settings.OssEndpoint}" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
                     <TextBox Text="{Binding OssEndpoint, UpdateSourceTrigger=PropertyChanged}"
                              Width="400" HorizontalAlignment="Left"/>
-                    <TextBlock Text="Region" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
+                    <TextBlock Text="{loc:Loc Key=Settings.OssRegion}" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
                     <TextBox Text="{Binding OssRegion, UpdateSourceTrigger=PropertyChanged}"
                              Width="200" HorizontalAlignment="Left"/>
-                    <TextBlock Text="Bucket Name" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
+                    <TextBlock Text="{loc:Loc Key=Settings.OssBucketName}" Style="{StaticResource LabelStyle}" Margin="0,12,0,4"/>
                     <TextBox Text="{Binding OssBucketName, UpdateSourceTrigger=PropertyChanged}"
                              Width="300" HorizontalAlignment="Left"/>
                 </StackPanel>
             </Border>
 
             <!-- Download Settings -->
-            <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+            <Border Grid.Row="4" Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="Local Storage" FontSize="15" FontWeight="Bold"
+                    <TextBlock Text="{loc:Loc Key=Settings.StorageSection}" FontSize="15" FontWeight="Bold"
                                Foreground="{StaticResource TextPrimary}" Margin="0,0,0,12"/>
-                    <TextBlock Text="Download Directory" Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Text="{loc:Loc Key=Settings.DownloadDir}" Style="{StaticResource LabelStyle}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBox Text="{Binding DownloadDirectory, UpdateSourceTrigger=PropertyChanged}"/>
-                        <Button Grid.Column="1" Content="Browse"
+                        <Button Grid.Column="1" Content="{loc:Loc Key=Settings.Browse}"
                                 Style="{StaticResource SecondaryButtonStyle}"
                                 Command="{Binding BrowseDownloadDirCommand}"
                                 Margin="8,0,0,0"/>
@@ -156,8 +175,8 @@
             </Border>
 
             <!-- Save -->
-            <StackPanel Grid.Row="4">
-                <Button Content="Save Settings"
+            <StackPanel Grid.Row="5">
+                <Button Content="{loc:Loc Key=Settings.Save}"
                         Style="{StaticResource PrimaryButtonStyle}"
                         Command="{Binding SaveCommand}"
                         Width="160" Height="40"

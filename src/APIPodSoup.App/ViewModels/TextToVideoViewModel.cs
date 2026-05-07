@@ -8,6 +8,7 @@ using System.Windows.Media.Imaging;
 using APIPodSoup.App.Views;
 using APIPodSoup.Core.Enums;
 using APIPodSoup.Core.Models;
+using APIPodSoup.Core.Localization;
 using APIPodSoup.Core.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -23,19 +24,35 @@ public partial class TextToVideoViewModel : ObservableObject
     private readonly IDownloadService _downloadService;
     private readonly IHistoryService _historyService;
     private readonly IModelProfileProvider _profileProvider;
+    private readonly ILocalizationService _loc;
 
     public TextToVideoViewModel(
         IApiPodService apiService,
         IOssService ossService,
         IDownloadService downloadService,
         IHistoryService historyService,
-        IModelProfileProvider profileProvider)
+        IModelProfileProvider profileProvider,
+        ILocalizationService loc)
     {
         _apiService = apiService;
         _ossService = ossService;
         _downloadService = downloadService;
         _historyService = historyService;
         _profileProvider = profileProvider;
+        _loc = loc;
+        PromptLabel = _loc["Gen.Label.VideoDesc"];
+        ReferenceLabel = _loc["Gen.Label.RefImage"];
+
+        // Re-apply localized labels when language changes
+        if (loc is System.ComponentModel.INotifyPropertyChanged inpc)
+            inpc.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == "Item[]")
+                {
+                    PromptLabel = _loc["Gen.Label.VideoDesc"];
+                    ReferenceLabel = _loc["Gen.Label.RefImage"];
+                }
+            };
 
         OssStatus = _ossService.StatusMessage;
 
@@ -63,19 +80,22 @@ public partial class TextToVideoViewModel : ObservableObject
         Qualities.Clear();
         foreach (var q in value.SupportedQualities) Qualities.Add(q);
         SelectedQuality = value.SupportedQualities.FirstOrDefault();
-        PromptLabel = value.PromptLabel;
-        ReferenceLabel = value.ReferenceLabel;
         PromptMaxLength = value.MaxPromptLength;
         MaxReferenceCount = value.MaxReferenceImages;
     }
 
     // ---- Labels ----
     [ObservableProperty] private string _ossStatus = string.Empty;
-    [ObservableProperty] private string _promptLabel = "Video Description";
-    [ObservableProperty] private string _referenceLabel = "Reference Image (optional)";
+    [ObservableProperty] private string _promptLabel = null!;
+    [ObservableProperty] private string _referenceLabel = null!;
     [ObservableProperty] private int _promptMaxLength = 4000;
-    [ObservableProperty] private int _maxReferenceCount = 1;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ReferenceLimitText))]
+    private int _maxReferenceCount = 1;
     [ObservableProperty] private bool _showQuality;
+
+    public string ReferenceLimitText => MaxReferenceCount > 0
+        ? _loc.Get("Gen.Label.RefLimit", MaxReferenceCount) : "";
     [ObservableProperty] private bool _showAspectRatio = true;
 
     // ---- Inputs ----
@@ -103,12 +123,35 @@ public partial class TextToVideoViewModel : ObservableObject
     [RelayCommand]
     private async Task GenerateAsync()
     {
-        if (string.IsNullOrWhiteSpace(Prompt) || SelectedModel == null) return;
+        if (SelectedModel == null) return;
+
+        if (string.IsNullOrWhiteSpace(Prompt))
+        {
+            MessageDialog.ShowError(_loc["Dialog.GenerationFailed"], _loc["Gen.Error.NoPrompt"]);
+            StepText = _loc["Gen.Error.NoPrompt"];
+            return;
+        }
+
+        if (ReferenceImages.Count > MaxReferenceCount)
+        {
+            var msg = _loc.Get("Gen.Error.TooManyRefs", MaxReferenceCount);
+            MessageDialog.ShowError(_loc["Dialog.GenerationFailed"], msg);
+            StepText = msg;
+            return;
+        }
+
+        if (SelectedModel.RequireReferenceImage && ReferenceImages.Count == 0)
+        {
+            MessageDialog.ShowError(_loc["Dialog.GenerationFailed"], _loc["Gen.Error.RequireRef"]);
+            StepText = _loc["Gen.Error.RequireRef"];
+            ProgressText = _loc["Gen.Error.RefHint"];
+            return;
+        }
 
         if (ReferenceImages.Count > 0 && !_ossService.IsConfigured)
         {
-            StepText = "Error: OSS not configured. To use reference images, set up OSS credentials in Settings.";
-            ProgressText = "Reference image upload failed";
+            StepText = _loc["Gen.Error.OssConfig"];
+            ProgressText = _loc["Gen.Error.OssUpload"];
             return;
         }
 
@@ -116,7 +159,7 @@ public partial class TextToVideoViewModel : ObservableObject
         HistoryRecord? history = null;
         try
         {
-            StepText = "Uploading reference images...";
+            StepText = _loc["Gen.UploadingRefs"];
             Progress = 0.1;
 
             var ossUrls = new List<string>();
@@ -130,7 +173,7 @@ public partial class TextToVideoViewModel : ObservableObject
                 }
             }
 
-            StepText = "Submitting video generation task...";
+            StepText = _loc["Gen.SubmittingVideo"];
             Progress = 0.3;
 
             var request = new ImageGenerationRequest
@@ -144,9 +187,9 @@ public partial class TextToVideoViewModel : ObservableObject
 
             var submitResult = await _apiService.SubmitVideoGenerationAsync(request);
             if (submitResult.Code != 200)
-                throw new InvalidOperationException($"API error: {submitResult.Message}");
+                throw new InvalidOperationException(_loc.Get("Gen.Error.ApiError", submitResult.Message));
 
-            var taskId = submitResult.Data?.TaskId ?? throw new InvalidOperationException("No task ID returned");
+            var taskId = submitResult.Data?.TaskId ?? throw new InvalidOperationException(_loc["Gen.Error.NoTaskId"]);
 
             history = new HistoryRecord
             {
@@ -163,12 +206,12 @@ public partial class TextToVideoViewModel : ObservableObject
             };
             await _historyService.CreateAsync(history);
 
-            StepText = "Generating video...";
+            StepText = _loc["Gen.GeneratingVideo"];
             Progress = 0.4;
-            ProgressText = "Video generation may take several minutes...";
+            ProgressText = _loc["Gen.WaitingVideo"];
 
             var stopwatch = Stopwatch.StartNew();
-            ProgressText = "Video generation may take several minutes... (0s)";
+            ProgressText = _loc["Gen.WaitingVideo"];
 
             using var timerCts = new CancellationTokenSource();
             _ = Task.Run(async () =>
@@ -178,7 +221,7 @@ public partial class TextToVideoViewModel : ObservableObject
                     try { await Task.Delay(1000, timerCts.Token); }
                     catch (OperationCanceledException) { break; }
                     var ts = stopwatch.Elapsed;
-                    ProgressText = $"Generating video... ({ts.Minutes * 60 + ts.Seconds}s)";
+                    ProgressText = _loc.Get("Gen.VideoGenElapsed", ts.Minutes * 60 + ts.Seconds);
                 }
             }, timerCts.Token);
 
@@ -187,13 +230,13 @@ public partial class TextToVideoViewModel : ObservableObject
                 var taskResult = await _apiService.WaitForVideoCompletionAsync(taskId, 5000);
 
                 if (taskResult.Data?.ResultUrls == null || taskResult.Data.ResultUrls.Count == 0)
-                    throw new InvalidOperationException("No result URLs returned");
+                    throw new InvalidOperationException(_loc["Gen.Error.NoResultUrl"]);
 
                 Debug.WriteLine($"[Result] Download URLs:");
                 foreach (var url in taskResult.Data.ResultUrls)
                     Debug.WriteLine($"  {url}");
 
-                StepText = "Downloading video...";
+                StepText = _loc["Gen.DownloadingVideo"];
                 Progress = 0.8;
 
                 var prefix = $"{SelectedModel.DisplayName.Replace(" ", "_")}_{SelectedAspectRatio}";
@@ -214,9 +257,9 @@ public partial class TextToVideoViewModel : ObservableObject
                     ResultVideos.Add(path);
 
                 var elapsedSec = (int)stopwatch.Elapsed.TotalSeconds;
-                StepText = "Done!";
+                StepText = _loc["Gen.Done"];
                 Progress = 1.0;
-                ProgressText = $"Generated {localPaths.Count} video(s) in {elapsedSec}s";
+                ProgressText = _loc.Get("Gen.ResultCountVideo", localPaths.Count, elapsedSec);
 
                 // Auto‑navigate to History after a short pause (only if user hasn't navigated away)
                 await Task.Delay(1500);
@@ -232,11 +275,11 @@ public partial class TextToVideoViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageDialog.ShowError("Generation Failed",
-                $"Video generation failed.\n\n{ex.Message}");
+            MessageDialog.ShowError(_loc["Dialog.GenerationFailed"],
+                $"{_loc["Dialog.VideoGenFailed"]}\n\n{ex.Message}");
 
-            StepText = $"Error: {ex.Message}";
-            ProgressText = "Generation failed";
+            StepText = _loc.Get("Gen.Error.Prefix", ex.Message);
+            ProgressText = _loc["Gen.Failed"];
             Progress = 0;
 
             if (history != null)

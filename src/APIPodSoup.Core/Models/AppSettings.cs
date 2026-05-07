@@ -7,6 +7,7 @@ public class AppSettings
     public OssSettings Oss { get; set; } = new();
     public string DownloadDirectory { get; set; } = string.Empty;
     public string Theme { get; set; } = "Dark";
+    public string Language { get; set; } = "en";
     public string? ProxyUrl { get; set; }
 }
 
