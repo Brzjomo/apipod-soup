@@ -25,6 +25,7 @@
   "TextToImage.Generate": "Generate",
   "TextToImage.Results": "Results",
   "TextToImage.Preview": "Preview",
+  "TextToImage.OutputCount": "Output Count",
   "TextToImage.OpenFolder": "Open Output Folder",
 
   "TextToVideo.Title": "Text to Video",

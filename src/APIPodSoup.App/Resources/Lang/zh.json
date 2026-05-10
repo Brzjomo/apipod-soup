@@ -25,6 +25,7 @@
   "TextToImage.Generate": "生成",
   "TextToImage.Results": "结果",
   "TextToImage.Preview": "预览",
+  "TextToImage.OutputCount": "输出数量",
   "TextToImage.OpenFolder": "打开输出目录",
 
   "TextToVideo.Title": "文生视频",

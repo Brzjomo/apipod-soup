@@ -8,5 +8,6 @@ public class GenerationConfig
     public string Quality { get; set; } = "1K";
     public List<string> ReferenceImagePaths { get; set; } = [];
     public int? Duration { get; set; }
+    public int? OutputCount { get; set; }
     public string? CallbackUrl { get; set; }
 }

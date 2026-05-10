@@ -11,7 +11,8 @@ public class ImageGenerationRequest
     public string Prompt { get; set; } = string.Empty;
 
     [JsonPropertyName("aspect_ratio")]
-    public string AspectRatio { get; set; } = "1:1";
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? AspectRatio { get; set; }
 
     [JsonPropertyName("quality")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -20,6 +21,14 @@ public class ImageGenerationRequest
     [JsonPropertyName("resolution")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Resolution { get; set; }
+
+    [JsonPropertyName("size")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Size { get; set; }
+
+    [JsonPropertyName("n")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? N { get; set; }
 
     [JsonPropertyName("image_urls")]
     public List<string> ImageUrls { get; set; } = [];

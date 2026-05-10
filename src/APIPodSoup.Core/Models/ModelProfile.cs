@@ -25,4 +25,13 @@ public class ModelProfile
 
     /// <summary>Whether the duration control should be visible (true when MinDuration > 0 and MaxDuration > 0).</summary>
     public bool ShowDuration => MinDuration > 0 && MaxDuration > MinDuration;
+
+    /// <summary>Maximum number of output images. 0 means not configurable.</summary>
+    public int MaxOutputCount { get; set; }
+
+    /// <summary>Whether the output count control should be visible.</summary>
+    public bool ShowOutputCount => MaxOutputCount > 1;
+
+    /// <summary>Use "size" as the resolution param key instead of "quality".</summary>
+    public bool UsesSizeParam { get; set; }
 }

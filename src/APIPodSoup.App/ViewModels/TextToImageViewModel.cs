@@ -85,6 +85,10 @@ public partial class TextToImageViewModel : ObservableObject
         PromptMaxLength = value.MaxPromptLength;
         MaxReferenceCount = value.MaxReferenceImages;
         ShowReferenceSection = MaxReferenceCount > 0;
+        ShowOutputCount = value.ShowOutputCount;
+        MaxOutputCount = value.MaxOutputCount;
+        SelectedOutputCount = value.ShowOutputCount ? 1 : 0;
+        UsesSizeParam = value.UsesSizeParam;
     }
 
     [ObservableProperty] private string _ossStatus = string.Empty;
@@ -108,6 +112,15 @@ public partial class TextToImageViewModel : ObservableObject
 
     public ObservableCollection<string> Qualities { get; private set; } = [];
     [ObservableProperty] private string? _selectedQuality;
+
+    [ObservableProperty] private bool _showOutputCount;
+    [ObservableProperty] private int _maxOutputCount = 1;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(OutputCountText))]
+    private int _selectedOutputCount;
+    [ObservableProperty] private bool _usesSizeParam;
+
+    public string OutputCountText => $"{SelectedOutputCount}";
 
     public ObservableCollection<string> ReferenceImages { get; } = [];
     [ObservableProperty] private bool _isDragging;
@@ -182,8 +195,10 @@ public partial class TextToImageViewModel : ObservableObject
             {
                 Model = SelectedModel.ModelId,
                 Prompt = Prompt,
-                AspectRatio = SelectedAspectRatio ?? "1:1",
-                Quality = SelectedQuality ?? "1K",
+                AspectRatio = ShowAspectRatio ? (SelectedAspectRatio ?? "1:1") : null,
+                Quality = !UsesSizeParam && !string.IsNullOrEmpty(SelectedQuality) ? SelectedQuality : null,
+                Size = UsesSizeParam && !string.IsNullOrEmpty(SelectedQuality) ? SelectedQuality : null,
+                N = ShowOutputCount ? SelectedOutputCount : null,
                 ImageUrls = ossUrls,
             };
 
@@ -392,6 +407,19 @@ public partial class TextToImageViewModel : ObservableObject
 
         var qualityMatch = Qualities.FirstOrDefault(q => q == record.Quality);
         if (qualityMatch != null) SelectedQuality = qualityMatch;
+
+        // Restore output count from API request JSON if present
+        if (ShowOutputCount && !string.IsNullOrEmpty(record.ApiRequestJson))
+        {
+            try
+            {
+                var req = JsonSerializer.Deserialize<ImageGenerationRequest>(record.ApiRequestJson);
+                if (req?.N.HasValue == true
+                    && req.N.Value >= 1 && req.N.Value <= MaxOutputCount)
+                    SelectedOutputCount = req.N.Value;
+            }
+            catch { }
+        }
 
         // Restore reference images if files still exist
         ReferenceImages.Clear();
