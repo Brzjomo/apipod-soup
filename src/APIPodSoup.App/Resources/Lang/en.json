@@ -38,6 +38,7 @@
   "TextToVideo.Generate": "Generate Video",
   "TextToVideo.Results": "Results",
   "TextToVideo.Open": "Open",
+  "TextToVideo.Duration": "Duration",
   "TextToVideo.OpenFolder": "Open Output Folder",
 
   "History.Title": "History",

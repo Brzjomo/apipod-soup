@@ -11,6 +11,7 @@
     <SolidColorBrush x:Key="TextSecondary" Color="#A0A0C0"/>
     <SolidColorBrush x:Key="AccentPrimary" Color="#7C5CFC"/>
     <SolidColorBrush x:Key="AccentHover" Color="#9168FF"/>
+    <SolidColorBrush x:Key="AccentLight" Color="#A78BFA"/>
     <SolidColorBrush x:Key="AccentPressed" Color="#6A4BE0"/>
     <SolidColorBrush x:Key="SuccessColor" Color="#4ADE80"/>
     <SolidColorBrush x:Key="WarningColor" Color="#FBBF24"/>

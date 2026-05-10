@@ -79,6 +79,22 @@ public class ModelProfileProvider : IModelProfileProvider
             // ---- Video Generation ----
             new ModelProfile
             {
+                ModelId = "grok-imagine-i2v",
+                DisplayName = "Grok Imagine I2V",
+                Category = ModelCategory.VideoGeneration,
+                MaxReferenceImages = 7,
+                RequireReferenceImage = true,
+                SupportedAspectRatios = ["2:3", "3:2", "1:1", "16:9", "9:16"],
+                SupportedQualities = ["480p", "720p"],
+                PromptLabel = "Video Description",
+                ReferenceLabel = "Reference Images (required, max 7)",
+                MaxPromptLength = 4000,
+                ApiEndpoint = "/v1/videos/generations",
+                MinDuration = 6,
+                MaxDuration = 30,
+            },
+            new ModelProfile
+            {
                 ModelId = "veo3-1-fast",
                 DisplayName = "Veo 3.1 Fast",
                 Category = ModelCategory.VideoGeneration,

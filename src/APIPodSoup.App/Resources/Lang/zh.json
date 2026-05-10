@@ -38,6 +38,7 @@
   "TextToVideo.Generate": "生成视频",
   "TextToVideo.Results": "结果",
   "TextToVideo.Open": "打开",
+  "TextToVideo.Duration": "时长",
   "TextToVideo.OpenFolder": "打开输出目录",
 
   "History.Title": "历史记录",

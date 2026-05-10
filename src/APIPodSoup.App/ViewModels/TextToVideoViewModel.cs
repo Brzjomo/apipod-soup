@@ -82,6 +82,10 @@ public partial class TextToVideoViewModel : ObservableObject
         SelectedQuality = value.SupportedQualities.FirstOrDefault();
         PromptMaxLength = value.MaxPromptLength;
         MaxReferenceCount = value.MaxReferenceImages;
+        ShowDuration = value.ShowDuration;
+        MinDuration = value.MinDuration;
+        MaxDuration = value.MaxDuration;
+        SelectedDuration = value.ShowDuration ? value.MinDuration : 0;
     }
 
     // ---- Labels ----
@@ -106,6 +110,15 @@ public partial class TextToVideoViewModel : ObservableObject
 
     public ObservableCollection<string> Qualities { get; private set; } = [];
     [ObservableProperty] private string? _selectedQuality;
+
+    [ObservableProperty] private bool _showDuration;
+    [ObservableProperty] private int _minDuration = 6;
+    [ObservableProperty] private int _maxDuration = 30;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DurationText))]
+    private int _selectedDuration;
+
+    public string DurationText => $"{SelectedDuration}s";
 
     public ObservableCollection<string> ReferenceImages { get; } = [];
     [ObservableProperty] private bool _isDragging;
@@ -181,8 +194,9 @@ public partial class TextToVideoViewModel : ObservableObject
                 Model = SelectedModel.ModelId,
                 Prompt = Prompt,
                 AspectRatio = SelectedAspectRatio ?? "16:9",
-                Quality = SelectedQuality ?? "",
+                Resolution = string.IsNullOrEmpty(SelectedQuality) ? null : SelectedQuality,
                 ImageUrls = ossUrls,
+                Duration = ShowDuration ? SelectedDuration : null,
             };
 
             var submitResult = await _apiService.SubmitVideoGenerationAsync(request);
@@ -383,6 +397,20 @@ public partial class TextToVideoViewModel : ObservableObject
 
         var qualityMatch = Qualities.FirstOrDefault(q => q == record.Quality);
         if (qualityMatch != null) SelectedQuality = qualityMatch;
+
+        // Restore duration from API request JSON if present
+        if (ShowDuration && !string.IsNullOrEmpty(record.ApiRequestJson))
+        {
+            try
+            {
+                var req = JsonSerializer.Deserialize<ImageGenerationRequest>(record.ApiRequestJson);
+                if (req?.Duration.HasValue == true
+                    && req.Duration.Value >= MinDuration
+                    && req.Duration.Value <= MaxDuration)
+                    SelectedDuration = req.Duration.Value;
+            }
+            catch { }
+        }
 
         ReferenceImages.Clear();
         if (!string.IsNullOrEmpty(record.ReferenceImagePaths))

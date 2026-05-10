@@ -85,6 +85,23 @@
                                       Width="120"/>
                         </StackPanel>
                     </StackPanel>
+                    <StackPanel Orientation="Horizontal"
+                                Visibility="{Binding ShowDuration, Converter={StaticResource BoolToVis}}"
+                                Margin="0,12,0,0">
+                        <TextBlock Text="{loc:Loc Key=TextToVideo.Duration}" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   FontSize="11" Margin="0,0,8,0"/>
+                        <Slider Minimum="{Binding MinDuration}"
+                                Maximum="{Binding MaxDuration}"
+                                Value="{Binding SelectedDuration}"
+                                IsSnapToTickEnabled="True"
+                                TickFrequency="1"
+                                Width="300"
+                                VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding DurationText}" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   FontSize="11" Margin="8,0,0,0" MinWidth="30"/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

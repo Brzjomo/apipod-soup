@@ -16,4 +16,13 @@ public class ModelProfile
     public int MaxPromptLength { get; set; } = 4000;
     public string ApiEndpoint { get; set; } = "/v1/images/generations";
     public string[] SupportedImageFormats { get; set; } = [".png", ".jpg", ".jpeg", ".webp"];
+
+    /// <summary>Minimum video duration in seconds. 0 means duration is not configurable.</summary>
+    public int MinDuration { get; set; }
+
+    /// <summary>Maximum video duration in seconds. 0 means duration is not configurable.</summary>
+    public int MaxDuration { get; set; }
+
+    /// <summary>Whether the duration control should be visible (true when MinDuration > 0 and MaxDuration > 0).</summary>
+    public bool ShowDuration => MinDuration > 0 && MaxDuration > MinDuration;
 }

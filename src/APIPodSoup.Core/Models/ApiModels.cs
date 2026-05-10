@@ -14,13 +14,22 @@ public class ImageGenerationRequest
     public string AspectRatio { get; set; } = "1:1";
 
     [JsonPropertyName("quality")]
-    public string Quality { get; set; } = "1K";
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Quality { get; set; }
+
+    [JsonPropertyName("resolution")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Resolution { get; set; }
 
     [JsonPropertyName("image_urls")]
     public List<string> ImageUrls { get; set; } = [];
 
     [JsonPropertyName("callback_url")]
     public string? CallbackUrl { get; set; }
+
+    [JsonPropertyName("duration")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? Duration { get; set; }
 }
 
 public class SubmitTaskResponse

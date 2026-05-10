@@ -147,6 +147,77 @@
         <Setter Property="Background" Value="Transparent"/>
     </Style>
 
+    <Style x:Key="SliderDecreaseButtonStyle" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Grid>
+                        <Border Background="{StaticResource AccentPrimary}"
+                                CornerRadius="3"
+                                Height="6" VerticalAlignment="Center"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="SliderIncreaseButtonStyle" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Grid>
+                        <Border Background="{StaticResource BgElevated}"
+                                CornerRadius="3"
+                                Height="6" VerticalAlignment="Center"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="Slider">
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid>
+                        <Track x:Name="PART_Track"
+                               VerticalAlignment="Center"
+                               Height="18">
+                            <Track.Thumb>
+                                <Thumb Width="14" Height="14"
+                                       Cursor="Hand"
+                                       Focusable="False"
+                                       OverridesDefaultStyle="True">
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Ellipse Width="14" Height="14"
+                                                     Fill="{StaticResource AccentPrimary}"
+                                                     Stroke="{StaticResource AccentLight}"
+                                                     StrokeThickness="1"/>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Style="{StaticResource SliderDecreaseButtonStyle}"
+                                              Command="Slider.DecreaseLarge"/>
+                            </Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Style="{StaticResource SliderIncreaseButtonStyle}"
+                                              Command="Slider.IncreaseLarge"/>
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Transparent repeat buttons (the track area above/below the thumb) -->
     <Style x:Key="ScrollBarButtonStyle" TargetType="RepeatButton">
         <Setter Property="Background" Value="Transparent"/>
