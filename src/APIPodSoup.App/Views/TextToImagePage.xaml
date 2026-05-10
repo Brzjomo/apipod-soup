@@ -69,7 +69,8 @@
                     <TextBlock Text="{loc:Loc Key=TextToImage.Parameters}" Style="{StaticResource LabelStyle}" Margin="0,0,0,12"/>
                     <StackPanel Orientation="Horizontal">
                         <StackPanel Orientation="Horizontal"
-                                    Visibility="{Binding ShowAspectRatio, Converter={StaticResource BoolToVis}}">
+                                    Visibility="{Binding ShowAspectRatio, Converter={StaticResource BoolToVis}}"
+                                    Margin="0,0,24,0">
                             <TextBlock Text="{loc:Loc Key=TextToImage.AspectRatio}" VerticalAlignment="Center"
                                        Foreground="{StaticResource TextSecondary}"
                                        FontSize="11" Margin="0,0,8,0"/>
@@ -78,8 +79,7 @@
                                       Width="140"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal"
-                                    Visibility="{Binding ShowQuality, Converter={StaticResource BoolToVis}}"
-                                    Margin="24,0,0,0">
+                                    Visibility="{Binding ShowQuality, Converter={StaticResource BoolToVis}}">
                             <TextBlock Text="{loc:Loc Key=TextToImage.Quality}" VerticalAlignment="Center"
                                        Foreground="{StaticResource TextSecondary}"
                                        FontSize="11" Margin="0,0,8,0"/>
