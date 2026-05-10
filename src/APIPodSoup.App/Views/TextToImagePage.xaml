@@ -105,6 +105,13 @@
                                    Foreground="{StaticResource TextSecondary}"
                                    FontSize="11" Margin="8,0,0,0" MinWidth="20"/>
                     </StackPanel>
+                    <CheckBox IsChecked="{Binding IsThinkingEnabled}"
+                              Visibility="{Binding ShowThinkingMode, Converter={StaticResource BoolToVis}}"
+                              Margin="0,12,0,0"
+                              Foreground="{StaticResource TextPrimary}"
+                              FontSize="12">
+                        <TextBlock Text="{loc:Loc Key=TextToImage.ThinkingMode}"/>
+                    </CheckBox>
                 </StackPanel>
             </Border>
 

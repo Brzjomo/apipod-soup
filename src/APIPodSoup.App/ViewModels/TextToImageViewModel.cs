@@ -89,6 +89,8 @@ public partial class TextToImageViewModel : ObservableObject
         MaxOutputCount = value.MaxOutputCount;
         SelectedOutputCount = value.ShowOutputCount ? 1 : 0;
         UsesSizeParam = value.UsesSizeParam;
+        ShowThinkingMode = value.ShowThinkingMode;
+        IsThinkingEnabled = false;
     }
 
     [ObservableProperty] private string _ossStatus = string.Empty;
@@ -119,6 +121,8 @@ public partial class TextToImageViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(OutputCountText))]
     private int _selectedOutputCount;
     [ObservableProperty] private bool _usesSizeParam;
+    [ObservableProperty] private bool _showThinkingMode;
+    [ObservableProperty] private bool _isThinkingEnabled;
 
     public string OutputCountText => $"{SelectedOutputCount}";
 
@@ -199,6 +203,7 @@ public partial class TextToImageViewModel : ObservableObject
                 Quality = !UsesSizeParam && !string.IsNullOrEmpty(SelectedQuality) ? SelectedQuality : null,
                 Size = UsesSizeParam && !string.IsNullOrEmpty(SelectedQuality) ? SelectedQuality : null,
                 N = ShowOutputCount ? SelectedOutputCount : null,
+                ThinkingMode = ShowThinkingMode ? IsThinkingEnabled : null,
                 ImageUrls = ossUrls,
             };
 

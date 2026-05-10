@@ -30,6 +30,10 @@ public class ImageGenerationRequest
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? N { get; set; }
 
+    [JsonPropertyName("thinking_mode")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? ThinkingMode { get; set; }
+
     [JsonPropertyName("image_urls")]
     public List<string> ImageUrls { get; set; } = [];
 

@@ -34,4 +34,10 @@ public class ModelProfile
 
     /// <summary>Use "size" as the resolution param key instead of "quality".</summary>
     public bool UsesSizeParam { get; set; }
+
+    /// <summary>Whether the model supports a thinking/tool-use mode toggle.</summary>
+    public bool SupportsThinkingMode { get; set; }
+
+    /// <summary>Whether the thinking mode toggle should be visible.</summary>
+    public bool ShowThinkingMode => SupportsThinkingMode;
 }
