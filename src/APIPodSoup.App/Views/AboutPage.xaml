@@ -13,11 +13,7 @@
                 <TextBlock Text="{loc:Loc Key=App.Brand}"
                            FontSize="28" FontWeight="Bold"
                            Foreground="{StaticResource AccentPrimary}"
-                           Margin="0,0,0,8"/>
-
-                <TextBlock Text="{loc:Loc Key=About.Version}"
-                           Foreground="{StaticResource TextSecondary}"
-                           FontSize="{StaticResource FontSizeSm}" Margin="0,0,0,24"/>
+                           Margin="0,0,0,24"/>
 
                 <!-- Description -->
                 <TextBlock Text="{loc:Loc Key=About.Description}"

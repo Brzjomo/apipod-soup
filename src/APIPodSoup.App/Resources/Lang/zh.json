@@ -154,7 +154,6 @@
   "Oss.UploadClientError": "OSS 上传失败（客户端）：{0}\n请检查网络和凭据。",
 
   "About.Description": "APIPodSoup 是一个 AI 生成客户端，连接 APIPod.ai API。使用 Nano Banana、GPT Image、Veo 3.1 Fast 等前沿 AI 模型生成图片和视频。",
-  "About.Version": "v1.0.0",
   "About.VersionLabel": "版本",
   "About.Author": "作者",
   "About.ProjectUrl": "项目"

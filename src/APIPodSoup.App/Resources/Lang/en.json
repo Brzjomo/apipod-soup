@@ -154,7 +154,6 @@
   "Oss.UploadClientError": "OSS upload failed (client): {0}\nCheck network and credentials.",
 
   "About.Description": "APIPodSoup is an AI generation client for the APIPod.ai API. Generate images and videos using state-of-the-art AI models including Nano Banana, GPT Image, and Veo 3.1 Fast.",
-  "About.Version": "v1.0.0",
   "About.VersionLabel": "Version",
   "About.Author": "Author",
   "About.ProjectUrl": "Project"

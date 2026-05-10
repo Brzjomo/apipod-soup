@@ -94,6 +94,22 @@ public class ModelProfileProvider : IModelProfileProvider
             },
             new ModelProfile
             {
+                ModelId = "wan2.7-image-pro-edit",
+                DisplayName = "WAN 2.7 Image Pro Edit",
+                Category = ModelCategory.ImageGeneration,
+                MaxReferenceImages = 9,
+                RequireReferenceImage = true,
+                SupportedAspectRatios = [],
+                SupportedQualities = ["1K", "2K"],
+                PromptLabel = "Edit Description",
+                ReferenceLabel = "Reference Images (required, max 9)",
+                MaxPromptLength = 4000,
+                ApiEndpoint = "/v1/images/generations",
+                MaxOutputCount = 4,
+                UsesSizeParam = true,
+            },
+            new ModelProfile
+            {
                 ModelId = "seedream-v4.5-edit",
                 DisplayName = "Seedream V4.5 Edit",
                 Category = ModelCategory.ImageGeneration,
@@ -119,22 +135,6 @@ public class ModelProfileProvider : IModelProfileProvider
                 ReferenceLabel = "Reference Images (required, max 14)",
                 MaxPromptLength = 4000,
                 ApiEndpoint = "/v1/images/generations",
-            },
-            new ModelProfile
-            {
-                ModelId = "wan2.7-image-pro-edit",
-                DisplayName = "WAN 2.7 Image Pro Edit",
-                Category = ModelCategory.ImageGeneration,
-                MaxReferenceImages = 9,
-                RequireReferenceImage = true,
-                SupportedAspectRatios = [],
-                SupportedQualities = ["1K", "2K"],
-                PromptLabel = "Edit Description",
-                ReferenceLabel = "Reference Images (required, max 9)",
-                MaxPromptLength = 4000,
-                ApiEndpoint = "/v1/images/generations",
-                MaxOutputCount = 4,
-                UsesSizeParam = true,
             },
 
             // ---- Video Generation ----
