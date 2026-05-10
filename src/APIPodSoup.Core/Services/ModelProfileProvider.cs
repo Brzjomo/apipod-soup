@@ -94,6 +94,34 @@ public class ModelProfileProvider : IModelProfileProvider
             },
             new ModelProfile
             {
+                ModelId = "seedream-v4.5-edit",
+                DisplayName = "Seedream V4.5 Edit",
+                Category = ModelCategory.ImageGeneration,
+                MaxReferenceImages = 14,
+                RequireReferenceImage = true,
+                SupportedAspectRatios = ["1:1", "2:3", "3:2", "3:4", "4:3", "16:9", "9:16", "21:9"],
+                SupportedQualities = ["2K", "4K"],
+                PromptLabel = "Edit Description",
+                ReferenceLabel = "Reference Images (required, max 14)",
+                MaxPromptLength = 4000,
+                ApiEndpoint = "/v1/images/generations",
+            },
+            new ModelProfile
+            {
+                ModelId = "seedream-5.0-lite-edit",
+                DisplayName = "Seedream 5.0 Lite Edit",
+                Category = ModelCategory.ImageGeneration,
+                MaxReferenceImages = 14,
+                RequireReferenceImage = true,
+                SupportedAspectRatios = ["1:1", "2:3", "3:2", "3:4", "4:3", "16:9", "9:16", "21:9"],
+                SupportedQualities = ["2K", "3K"],
+                PromptLabel = "Edit Description",
+                ReferenceLabel = "Reference Images (required, max 14)",
+                MaxPromptLength = 4000,
+                ApiEndpoint = "/v1/images/generations",
+            },
+            new ModelProfile
+            {
                 ModelId = "wan2.7-image-pro-edit",
                 DisplayName = "WAN 2.7 Image Pro Edit",
                 Category = ModelCategory.ImageGeneration,
